@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plan Your Day - Display</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Nunito", sans-serif;
+        display: flex;
+        height: 100vh;
+        background-color: #f3f4f6;
+      }
+      .preview {
+        flex-grow: 1;
+        height: 100vh;
+      }
+      .preview-content {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        height: 100%;
+      }
+      /* Left Column: Date Section in Preview */
+      .date-section {
+        color: white;
+        width: 25%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+      .date-section::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(2, 15, 43, 0.774);
+      }
+      .date-number {
+        font-size: 14rem;
+        font-weight: bold;
+        line-height: 1;
+        z-index: 1;
+      }
+      .date-month-year,
+      .date-day {
+        font-size: 4.5rem;
+        font-weight: bold;
+        margin-top: 1rem;
+        z-index: 1;
+      }
+      /* Right Column: Events Section in Preview */
+      .events-section {
+        background-color: #f0f0f0;
+        width: 75%;
+        padding: 4rem;
+        overflow-y: auto;
+      }
+      .events-heading {
+        font-size: 4rem;
+        font-weight: bold;
+        margin-bottom: 2rem;
+        text-align: left;
+      }
+      .event-item {
+        background-color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+      }
+      .event-time {
+        padding: 1rem;
+        background-color: rgb(14, 40, 95);
+        color: #fff;
+        font-size: 2.2rem;
+        font-weight: bold;
+        width: 33.33%;
+        text-align: center;
+      }
+      .event-title {
+        font-size: 2.2rem;
+        font-weight: bold;
+        margin-left: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Preview Display Area -->
+    <div class="preview">
+      <div class="preview-content">
+        <div class="date-section" id="previewDateSection">
+          <div id="previewDateNumber" class="date-number">--</div>
+          <div id="previewDateMonthYear" class="date-month-year">
+            Select a date
+          </div>
+          <div id="previewDayName" class="date-day"></div>
+        </div>
+
+        <div class="events-section">
+          <div class="events-heading">Today's Events</div>
+          <div id="previewEventList" class="space-y-4">
+            <p class="text-center text-gray-500">No events added yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const date = params.get("date");
+      const events = JSON.parse(
+        decodeURIComponent(params.get("events") || "[]")
+      );
+
+      function formatTimeTo12Hour(time) {
+        const [hour, minute] = time.split(":");
+        const period = +hour >= 12 ? "PM" : "AM";
+        const hour12 = (+hour % 12 || 12).toString().padStart(2, "0");
+        return `${hour12}:${minute.padStart(2, "0")} ${period}`;
+      }
+
+      if (date) {
+        const [year, month, day] = date.split("-");
+        const dateObj = new Date(year, month - 1, day);
+        document.getElementById("previewDateNumber").innerText =
+          dateObj.getDate();
+        document.getElementById(
+          "previewDateMonthYear"
+        ).innerText = `${dateObj.toLocaleDateString("en-US", {
+          month: "short",
+        })}, ${dateObj.getFullYear()}`;
+        document.getElementById("previewDayName").innerText =
+          dateObj.toLocaleDateString("en-US", { weekday: "long" });
+
+        // Apply background image URL from the params (if any)
+        const bgUrl = params.get("bgUrl") || "";
+        const previewDateSection =
+          document.getElementById("previewDateSection");
+        previewDateSection.style.backgroundImage = bgUrl ? `url(${bgUrl})` : "";
+      }
+
+      function renderEvents() {
+        const previewEventList = document.getElementById("previewEventList");
+        previewEventList.innerHTML = ""; // Clear previous events
+
+        events.forEach((event) => {
+          const eventItem = document.createElement("div");
+          eventItem.classList.add("event-item");
+
+          const formattedStartTime = formatTimeTo12Hour(event.time);
+          const formattedEndTime = formatTimeTo12Hour(event.endTime);
+
+          eventItem.innerHTML = `
+            <span class="event-time">${formattedStartTime} to ${formattedEndTime}</span>
+            <span class="event-title">${event.title}</span>
+        `;
+          previewEventList.appendChild(eventItem);
+        });
+      }
+
+      renderEvents();
+    </script>
+  </body>
+</html>
